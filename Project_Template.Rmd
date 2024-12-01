@@ -8,19 +8,33 @@
 
 ```{r setup, include=FALSE}
 # Set your working directory
-
+getwd()
 # Load your packages
+library(tidyverse)
+library(ggplot2)
+library(dplyr)
+library(readr)
+library(tidyr)
 
 # Set your ggplot theme
+mytheme <- theme_set(theme_minimal())
 
 # Load your datasets
-
+PM2_5_2000 <- read_csv("DATA/PM2.5_2000.csv")
+#View(PM2_5_2000)
+PM2_5_2022 <- read_csv("DATA/PM2.5_2022.csv")
+#View(PM2_5_2022)
+SVI_CA_County_2000 <- read_csv("DATA/SVI_CA_County_2000.csv")
+#View(SVI_CA_County_2000)
+SVI_CA_County_2022 <- read_csv("DATA/SVI_CA_County_2022.csv")
+#View(SVI_CA_County_2022)
 ```
 
 
 # Rationale and Research Questions
+This project explores the relationship between air quality and social vulnerability in California.
 
-
+Research Question: Do communities facing higher pollution levels have less access to health insurance and medical care?
 
 \newpage
 
@@ -31,8 +45,11 @@
 \newpage
 
 # Exploratory Analysis 
+```{r}
 
 
+
+```
 
 \newpage
 
