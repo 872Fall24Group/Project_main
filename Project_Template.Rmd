@@ -96,6 +96,29 @@ head(Merged_2022)
 \newpage
 
 # Analysis
+```{r}
+model <- lm(yearly_avg_PM25 ~ Percent_Below_150_Poverty + Minority_Population_Estimate, data = Merged_2022)
+summary(model)
+library(ggplot2)
+ggplot(Merged_2022, aes(x = Percent_Below_150_Poverty, y = yearly_avg_PM25)) +
+    geom_point() +
+    geom_smooth(method = "lm", col = "blue")
+ggplot(Merged_2022, aes(x = Minority_Population_Estimate, y = yearly_avg_PM25)) +
+    geom_point() +
+    geom_smooth(method = "lm", col = "blue")
+
+```
+```{r}
+model <- lm(yearly_avg_PM25 ~ Percent_Below_150_Poverty + Minority_Population_Estimate, data = Merged_2000)
+summary(model)
+library(ggplot2)
+ggplot(Merged_2000, aes(x = Percent_Below_150_Poverty, y = yearly_avg_PM25)) +
+    geom_point() +
+    geom_smooth(method = "lm", col = "blue")
+ggplot(Merged_2000, aes(x = Minority_Population_Estimate, y = yearly_avg_PM25)) +
+    geom_point() +
+    geom_smooth(method = "lm", col = "blue")
+```
 
 
 
