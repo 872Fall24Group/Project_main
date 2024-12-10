@@ -16,7 +16,6 @@ library(dplyr)
 library(readr)
 library(tidyr)
 
-# Set your ggplot theme
 mytheme <- theme_set(theme_minimal())
 
 # Load your datasets
@@ -30,23 +29,66 @@ SVI_CA_County_2022 <- read_csv("DATA/SVI_CA_County_2022.csv")
 #View(SVI_CA_County_2022)
 ```
 
+```{r}
+Svi_data_2022 <- SVI_CA_County_2022 %>%
+  select(COUNTY, FIPS, EP_POV150, E_MINRTY) %>%
+  mutate(FIPS = sub("^06", "", FIPS)) %>%
+  rename(
+    County = COUNTY,
+    `County FIPS Code` = FIPS,
+    Percent_Below_150_Poverty = EP_POV150,
+    Minority_Population_Estimate = E_MINRTY
+  )
 
-# Rationale and Research Questions
-This project explores the relationship between air quality and social vulnerability in California.
 
-Research Question: Do communities facing higher pollution levels have less access to health insurance and medical care?
+# View the updated data
+head(Svi_data_2022)
+Svi_data_2000 <- SVI_CA_County_2000 %>% 
+  select(COUNTY, CNTY_FIPS, G3V1N, G1V1N) %>%
+  mutate(FIPS = sub("^06", "", CNTY_FIPS)) %>%
+  rename(
+    County = COUNTY,
+   `County FIPS Code` = CNTY_FIPS,
+    Percent_Below_150_Poverty = G3V1N,
+    Minority_Population_Estimate = G1V1N
+  )
 
-\newpage
-
-# Dataset Information
+```
 
 
+```{r}
+PM2_5_2022$Date <- as.Date(PM2_5_2022$Date)
+  # Calculate the daily mean PM2.5 for each date within each group
+  # Calculate the yearly average daily mean PM2.5 concentration per county
+PM2_5_2022_result <- PM2_5_2022 %>%
+  mutate(year = year(Date)) %>%
+  group_by(`County FIPS Code`, year) %>%
+  summarise(`Daily Mean PM2.5 Concentration` = mean(`Daily Mean PM2.5 Concentration`, na.rm = TRUE)) %>%
+  summarise(yearly_avg_PM25 = mean(`Daily Mean PM2.5 Concentration`, na.rm = TRUE))
+print(PM2_5_2022_result)
 
-\newpage
+PM2_5_2000$Date <- as.Date(PM2_5_2000$Date)
+  # Calculate the daily mean PM2.5 for each date within each group
+  # Calculate the yearly average daily mean PM2.5 concentration per county
+PM2_5_2000_result <- PM2_5_2000 %>%
+  mutate(year = year(Date)) %>%
+  group_by(`County FIPS Code`, year) %>%
+  summarise(`Daily Mean PM2.5 Concentration` = mean(`Daily Mean PM2.5 Concentration`, na.rm = TRUE)) %>%
+  summarise(yearly_avg_PM25 = mean(`Daily Mean PM2.5 Concentration`, na.rm = TRUE))
+print(PM2_5_2000_result)
+```
 
-# Exploratory Analysis 
+
 ```{r}
 
+# Merge SVI and PM2.5 datasets for 2000
+Merged_2000 <- inner_join(Svi_data_2000, PM2_5_2000_result, by = "County FIPS Code")
+
+# Merge SVI and PM2.5 datasets for 2022
+Merged_2022 <- inner_join(Svi_data_2022, PM2_5_2022_result, by = "County FIPS Code")
+
+head(Merged_2000)
+head(Merged_2022)
 
 
 ```
