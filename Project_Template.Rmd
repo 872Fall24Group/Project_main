@@ -137,6 +137,138 @@ Merged_2022 <- Merged_2022 %>%
 head(Merged_2022)
 
 ```
+# CORRELATION ANALYSIS
+```{r}
+# This examines associations between PM2.5 and other variables (Percent Uninsured, Percent Below Poverty, Minority Percentage)
+
+# CORRELATION MATRIX - 2022
+# Test associations between PM2.5 and socioeconomic variables for 2022 data
+correlation_matrix_2022 <- cor(Merged_2022[, c("yearly_avg_PM25", 
+                                               "Percent_Uninsured", 
+                                               "Percent_Below_Poverty", 
+                                               "Percent_Below_150_Poverty", 
+                                               "Minority_Percentage")], 
+                               use = "complete.obs", method = "pearson")
+
+# Print the correlation matrix for 2022
+print(correlation_matrix_2022)
+
+# CORRELATION MATRIX - 2000
+# Test associations between PM2.5 and socioeconomic variables for 2000 data
+correlation_matrix_2000 <- cor(Merged_2000[, c("yearly_avg_PM25", 
+                                               "Percent_Below_Poverty", 
+                                               "Minority_Percentage")], 
+                               use = "complete.obs", method = "pearson")
+
+# Print the correlation matrix for 2000
+print(correlation_matrix_2000)
+
+```
+
+
+# MULTIVARIATE REGRESSION
+# Note: This is for exploring associations, not causation.
+```{r}
+# This models PM2.5 as a function of Percent Uninsured, Percent Below Poverty, and Minority Percentage.
+# This regression is for associational analysis, not to infer causation.
+
+# REGRESSION MODELS - 2022
+# MODEL 1: Using Percent Below Poverty
+pm25_model_2022_poverty <- lm(yearly_avg_PM25 ~ Percent_Uninsured + Percent_Below_Poverty + Minority_Percentage, data = Merged_2022)
+summary(pm25_model_2022_poverty)
+
+# MODEL 2: Using Percent Below 150% Poverty
+pm25_model_2022_150_poverty <- lm(yearly_avg_PM25 ~ Percent_Uninsured + Percent_Below_150_Poverty + Minority_Percentage, data = Merged_2022)
+summary(pm25_model_2022_150_poverty)
+
+
+# REGRESSION MODEL - 2000
+# Association between PM2.5 and socioeconomic variables
+pm25_model_2000 <- lm(yearly_avg_PM25 ~ Percent_Below_Poverty + Minority_Percentage, data = Merged_2000)
+summary(pm25_model_2000)
+
+```
+
+#Interpretation:
+
+#Both models for 2022 show that Minority Percentage and poverty measures (whether below poverty or 150% poverty) are significantly associated with higher PM2.5 levels, supporting the hypothesis that vulnerable populations are more exposed to pollution. However, Percent Uninsured does not show a significant relationship with PM2.5 in either model. The models explain about 23–25% of the variance, indicating moderate explanatory power.The 2000 regression model reveals a significant positive association between Minority Percentage and PM2.5 levels but Percent Below Poverty shows no significant relationship with PM2.5. This differs from the 2022 results, highlighting a possible shift over time in how demographic and socioeconomic factors relate to pollution exposure. 
+
+
+#Comparitive Analysis between 2000 and 2022
+
+```{r}
+# Merge the 2000 and 2022 datasets for paired analysis
+differences <- Merged_2000 %>%
+  inner_join(Merged_2022, by = "County FIPS Code", suffix = c("_2000", "_2022")) %>%
+  mutate(
+    PM2.5_Difference = yearly_avg_PM25_2022 - yearly_avg_PM25_2000,
+    Poverty_Difference = Percent_Below_Poverty_2022 - Percent_Below_Poverty_2000,
+    Minority_Difference = Minority_Percentage_2022 - Minority_Percentage_2000,
+    PM2.5_Change = ifelse(PM2.5_Difference > 0.01, "Increase",
+                          ifelse(PM2.5_Difference < -0.01, "Decrease", "No Change")),
+    Poverty_Change = ifelse(Poverty_Difference > 0.01, "Increase",
+                            ifelse(Poverty_Difference < -0.01, "Decrease", "No Change")),
+    Minority_Change = ifelse(Minority_Difference > 0.01, "Increase",
+                             ifelse(Minority_Difference < -0.01, "Decrease", "No Change"))
+  )
+
+
+# County-Level Change Summary
+# Paired Comparison Results
+paired_comparison_results <- data.frame(
+  Metric = c("PM2.5", "Percent Below Poverty", "Minority Percentage"),
+  Mean_Change = c(
+    mean(differences$PM2.5_Difference, na.rm = TRUE),
+    mean(differences$Poverty_Difference, na.rm = TRUE),
+    mean(differences$Minority_Difference, na.rm = TRUE)
+  ),
+  T_Statistic = c(
+    t.test(differences$PM2.5_Difference, mu = 0)$statistic,
+    t.test(differences$Poverty_Difference, mu = 0)$statistic,
+    t.test(differences$Minority_Difference, mu = 0)$statistic
+  ),
+  P_Value = c(
+    t.test(differences$PM2.5_Difference, mu = 0)$p.value,
+    t.test(differences$Poverty_Difference, mu = 0)$p.value,
+    t.test(differences$Minority_Difference, mu = 0)$p.value
+  )
+)
+
+county_level_summary <- data.frame(
+  Metric = c("PM2.5", "Percent Below Poverty", "Minority Percentage"),
+  Increase = sapply(c("PM2.5_Change", "Poverty_Change", "Minority_Change"), 
+                    function(col) sum(differences[[col]] == "Increase")),
+  Decrease = sapply(c("PM2.5_Change", "Poverty_Change", "Minority_Change"), 
+                    function(col) sum(differences[[col]] == "Decrease")),
+  No_Change = sapply(c("PM2.5_Change", "Poverty_Change", "Minority_Change"), 
+                     function(col) sum(differences[[col]] == "No Change"))
+)
+
+# PM2.5 Changes By Poverty Trends
+poverty_pm25_summary <- differences %>%
+  group_by(Poverty_Change) %>%
+  summarise(
+    Average_PM2.5_Change = mean(PM2.5_Difference, na.rm = TRUE),
+    Number_of_Counties = n()
+  ) %>%
+  filter(Poverty_Change %in% c("Increase", "Decrease"))
+
+
+# Print the results
+# Print the Paired Comparison Table
+print("Paired Comparison Results for 2000 vs. 2022")
+print(paired_comparison_results)
+
+print("County-Level Change Summary")
+print(county_level_summary)
+
+print("PM2.5 Changes By Poverty Trends")
+print(poverty_pm25_summary)
+
+
+```
+
+#Interpretation: Over the past 22 years, there has been a significant reduction in PM2.5 levels and poverty rates, indicating improvements in air quality and socioeconomic conditions. However, the minority population percentage has significantly increased, reflecting notable demographic shifts. These trends suggest progress in environmental and economic factors, alongside evolving population dynamics, which may have implications for policy and resource allocation in addressing environmental justice and equity. In counties where poverty decreased, PM2.5 levels also decreased significantly, with an average reduction of 4.31 units. Conversely, in counties where poverty increased, PM2.5 levels still decreased on average, but by a smaller margin of 2.81 units. This suggests that PM2.5 has generally declined across counties, regardless of poverty trends, with a greater reduction observed in counties experiencing poverty decreases.
 
 
 \newpage
