@@ -6,7 +6,7 @@
 \listoffigures 
 \newpage
 
-```{r setup, include=FALSE}
+```{r setup, include=FALSE, message=FALSE}
 # Set your working directory
 getwd()
 # Load your packages
@@ -27,39 +27,48 @@ SVI_CA_County_2000 <- read_csv("DATA/SVI_CA_County_2000.csv")
 #View(SVI_CA_County_2000)
 SVI_CA_County_2022 <- read_csv("DATA/SVI_CA_County_2022.csv")
 #View(SVI_CA_County_2022)
+# Read the poverty data. Skip the first 3 rows to bypass metadata and extract the header row
+poverty_data_2022 <- read_csv("DATA/est22all.csv", skip = 3)
 ```
 
 ```{r}
 Svi_data_2022 <- SVI_CA_County_2022 %>%
-  select(COUNTY, FIPS, EP_POV150, E_MINRTY) %>%
-  mutate(FIPS = sub("^06", "", FIPS)) %>%
+  select(COUNTY, FIPS, EP_POV150, E_MINRTY, E_TOTPOP, EP_UNINSUR) %>% # Include uninsured percentage
+  mutate(
+    FIPS = sub("^06", "", FIPS),
+    Minority_Percentage = (E_MINRTY / E_TOTPOP) * 100 # Calculate minority percentage
+  ) %>%
   rename(
     County = COUNTY,
     `County FIPS Code` = FIPS,
     Percent_Below_150_Poverty = EP_POV150,
-    Minority_Population_Estimate = E_MINRTY
+    Percent_Uninsured = EP_UNINSUR # Add a new column for uninsured percentage
   )
-
 
 # View the updated data
 head(Svi_data_2022)
+
 Svi_data_2000 <- SVI_CA_County_2000 %>% 
-  select(COUNTY, CNTY_FIPS, G3V1N, G1V1N) %>%
-  mutate(FIPS = sub("^06", "", CNTY_FIPS)) %>%
+  select(COUNTY, CNTY_FIPS, G3V1N, G1V1N, Totpop2000) %>% # Include total population column
+  mutate(
+    Percent_Below_Poverty = (G1V1N / Totpop2000) * 100, # Calculate poverty percentage
+    Minority_Percentage = (G3V1N / Totpop2000) * 100,  # Calculate minority percentage
+    FIPS = sub("^06", "", CNTY_FIPS)
+  ) %>%
   rename(
     County = COUNTY,
-   `County FIPS Code` = CNTY_FIPS,
-    Percent_Below_150_Poverty = G3V1N,
-    Minority_Population_Estimate = G1V1N
+    `County FIPS Code` = CNTY_FIPS
   )
-
 ```
 
 
 ```{r}
-PM2_5_2022$Date <- as.Date(PM2_5_2022$Date)
-  # Calculate the daily mean PM2.5 for each date within each group
-  # Calculate the yearly average daily mean PM2.5 concentration per county
+# Fixing date parsing for PM2.5 2022 dataset
+PM2_5_2022 <- PM2_5_2022 %>%
+  mutate(Date = parse_date(Date, format = "%m/%d/%Y")) # Corrected format
+
+# Calculate the daily mean PM2.5 for each date within each group
+# Calculate the yearly average daily mean PM2.5 concentration per county
 PM2_5_2022_result <- PM2_5_2022 %>%
   mutate(year = year(Date)) %>%
   group_by(`County FIPS Code`, year) %>%
@@ -67,9 +76,13 @@ PM2_5_2022_result <- PM2_5_2022 %>%
   summarise(yearly_avg_PM25 = mean(`Daily Mean PM2.5 Concentration`, na.rm = TRUE))
 print(PM2_5_2022_result)
 
-PM2_5_2000$Date <- as.Date(PM2_5_2000$Date)
-  # Calculate the daily mean PM2.5 for each date within each group
-  # Calculate the yearly average daily mean PM2.5 concentration per county
+
+# Fixing date parsing for PM2.5 2000 dataset
+PM2_5_2000 <- PM2_5_2000 %>%
+  mutate(Date = parse_date(Date, format = "%m/%d/%Y")) # Corrected format
+
+# Calculate the daily mean PM2.5 for each date within each group
+# Calculate the yearly average daily mean PM2.5 concentration per county
 PM2_5_2000_result <- PM2_5_2000 %>%
   mutate(year = year(Date)) %>%
   group_by(`County FIPS Code`, year) %>%
@@ -87,11 +100,44 @@ Merged_2000 <- inner_join(Svi_data_2000, PM2_5_2000_result, by = "County FIPS Co
 # Merge SVI and PM2.5 datasets for 2022
 Merged_2022 <- inner_join(Svi_data_2022, PM2_5_2022_result, by = "County FIPS Code")
 
+# Standardize county names in 2022 dataset by removing "County"
+Merged_2022 <- Merged_2022 %>%
+  mutate(County = str_remove(County, " County$"))
+
 head(Merged_2000)
 head(Merged_2022)
 
 
 ```
+
+```{r, message=FALSE}
+#Adding 100% poverty level data to the SVI_CA_County_2022 dataset to make it comparable with 2000 data
+
+# Keep only relevant columns and rename them
+poverty_data_2022 <- poverty_data_2022 %>%
+  select(
+    `State FIPS Code`,                  # State FIPS Code
+    `County FIPS Code`,                 # County FIPS Code
+    `Poverty Percent, All Ages`         # Percent below 100% poverty
+  ) %>%
+  rename(
+    `Percent_Below_Poverty` = `Poverty Percent, All Ages`,  # Rename for consistency
+  )
+
+# Filter for California data (State FIPS = 06)
+california_poverty <- poverty_data_2022 %>%
+  filter(`State FIPS Code` == "06") %>%
+  select(`County FIPS Code`, `Percent_Below_Poverty`) # Keep only required columns
+
+# Merge the poverty data into the SVI 2022 dataset
+Merged_2022 <- Merged_2022 %>%
+  left_join(california_poverty, by = "County FIPS Code")
+
+# Inspect the updated dataset
+head(Merged_2022)
+
+```
+
 
 \newpage
 
