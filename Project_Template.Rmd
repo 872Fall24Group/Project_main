@@ -1,5 +1,5 @@
 ---
-output: html_document
+output: pdf_document
 editor_options: 
   chunk_output_type: console
 ---
@@ -145,7 +145,6 @@ PM2_5_2000_result <- PM2_5_2000 %>%
 print(PM2_5_2000_result)
 ```
 
-
 ```{r}
 
 # Merge SVI and PM2.5 datasets for 2000
@@ -162,6 +161,42 @@ head(Merged_2000)
 head(Merged_2022)
 
 
+```
+
+```{r}
+# Load the shapefile
+library(sf) 
+
+shapefile_path <- "DATA/CA_Counties.shp"
+counties <- st_read(shapefile_path)
+print(counties)
+
+county_map <- counties %>%
+  left_join(Merged_2022, by = c("COUNTYFP" = "County FIPS Code"))
+
+ggplot(data = county_map) +
+  geom_sf(aes(fill = yearly_avg_PM25)) +
+  scale_fill_viridis_c(option = "plasma",direction = -1, name = "PM2.5 (μg/m³)") + 
+  labs(
+    title = "PM2.5 Levels Across California (2022)",
+    caption = "Data Source: EPA and CDC"
+  ) +
+  mytheme
+```
+
+```{r}
+# Map of PM2.5 levels for 2000 data
+county_map <- counties %>%
+  left_join(Merged_2000, by = c("COUNTYFP" = "County FIPS Code"))
+
+ggplot(data = county_map) +
+  geom_sf(aes(fill = yearly_avg_PM25)) + 
+  scale_fill_viridis_c(option = "plasma",direction = -1, name = "PM2.5 (μg/m³)") + 
+  labs(
+    title = "PM2.5 Levels Across California (2000)",
+    caption = "Data Source: EPA and CDC"
+  ) +
+  mytheme
 ```
 
 ```{r, message=FALSE}
@@ -391,7 +426,7 @@ ggplot(Merged_2022, aes(x = Minority_Percentage, y = yearly_avg_PM25)) +
 
 ```
 ```{r}
-model <- lm(yearly_avg_PM25 ~ Percent_Below_150_Poverty + Minority_Population_Estimate, data = Merged_2000)
+model <- lm(yearly_avg_PM25 ~ Percent_Below_Poverty + Minority_Percentage, data = Merged_2000)
 summary(model)
 
 # Scatter Plot for Percent Below Poverty vs PM2.5
@@ -421,8 +456,9 @@ ggplot(Merged_2000, aes(x = Minority_Percentage, y = yearly_avg_PM25)) +
 ```
 
 
+```
 
-## Question 1: <insert specific question here and add additional subsections for additional questions below, if needed>
+## Question 1: <insert specific question here and ahttps://labs-az-00.oit.duke.edu:30106/graphics/plot_zoom_png?width=518&height=363dd additional subsections for additional questions below, if needed>
 
 ## Question 2: 
 
