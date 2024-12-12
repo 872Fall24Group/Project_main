@@ -30,7 +30,56 @@ SVI_CA_County_2022 <- read_csv("DATA/SVI_CA_County_2022.csv")
 # Read the poverty data. Skip the first 3 rows to bypass metadata and extract the header row
 poverty_data_2022 <- read_csv("DATA/est22all.csv", skip = 3)
 ```
+# Rationale and Research Questions
+This project explores the relationship between air quality and social vulnerability in California.
 
+Research Question: Do communities facing higher pollution levels have less access to health insurance and medical care?
+
+\newpage
+
+# Dataset Information
+# Dataset Information
+
+# Source and Content of Data
+# The data used in this analysis was obtained from two main sources: 
+# the Environmental Protection Agency (EPA) for PM2.5 concentration data,
+# and the Centers for Disease Control and Prevention (CDC) for the Social Vulnerability Index (SVI) data.
+
+# The PM2.5 concentration data was collected for the years 2000 and 2022. 
+# This dataset contains the daily mean PM2.5 levels measured in micrograms per cubic meter (μg/m3) 
+# for each county in California. The data was aggregated to calculate the yearly average PM2.5 
+# concentration for each county.
+
+# The SVI data provides information on the social vulnerability of California counties 
+# across several socioeconomic indicators. The specific variables used in this analysis include:
+# - Percent of population below 150% of the poverty level
+# - Percent of minority (non-white) population 
+# - Percent of population without health insurance coverage
+
+# Data Wrangling Process
+# To integrate the PM2.5 and SVI data, an inner join was performed on the county FIPS code 
+# to create a merged dataset for analysis. This allowed us to examine the relationships 
+# between air pollution levels and socioeconomic factors at the county level.
+
+# Dataset Structure Summary
+# The final dataset has the following structure:
+
+# | Column Name | Data Type | Description |
+# |-------------|-----------|-------------|
+# | County FIPS Code | Character | Unique identifier for each county |
+# | County | Character | Name of the county |
+# | Percent_Below_150_Poverty | Numeric | Percentage of population below 150% of the poverty level |
+# | Percent_Uninsured | Numeric | Percentage of population without health insurance coverage |
+# | Minority_Percentage | Numeric | Percentage of minority (non-white) population |
+# | yearly_avg_PM25_2000 | Numeric | Yearly average PM2.5 concentration in 2000 |
+# | yearly_avg_PM25_2022 | Numeric | Yearly average PM2.5 concentration in 2022 |
+
+# By combining the air quality and socioeconomic data, this dataset enables the investigation 
+# of the relationships between environmental exposures and demographic factors across 
+# California counties over the 22-year period from 2000 to 2022.
+\newpage
+
+# Exploratory Analysis 
 ```{r}
 Svi_data_2022 <- SVI_CA_County_2022 %>%
   select(COUNTY, FIPS, EP_POV150, E_MINRTY, E_TOTPOP, EP_UNINSUR) %>% # Include uninsured percentage
@@ -275,13 +324,13 @@ print(poverty_pm25_summary)
 
 # Analysis
 ```{r}
-model <- lm(yearly_avg_PM25 ~ Percent_Below_150_Poverty + Minority_Population_Estimate, data = Merged_2022)
+model <- lm(yearly_avg_PM25 ~ Percent_Below_150_Poverty + Minority_Percentage, data = Merged_2022)
 summary(model)
 library(ggplot2)
 ggplot(Merged_2022, aes(x = Percent_Below_150_Poverty, y = yearly_avg_PM25)) +
     geom_point() +
     geom_smooth(method = "lm", col = "blue")
-ggplot(Merged_2022, aes(x = Minority_Population_Estimate, y = yearly_avg_PM25)) +
+ggplot(Merged_2022, aes(x = Minority_Percentage, y = yearly_avg_PM25)) +
     geom_point() +
     geom_smooth(method = "lm", col = "blue")
 
