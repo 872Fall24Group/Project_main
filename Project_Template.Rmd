@@ -1,3 +1,8 @@
+---
+output: html_document
+editor_options: 
+  chunk_output_type: console
+---
 \newpage
 \tableofcontents 
 \newpage
@@ -202,6 +207,23 @@ correlation_matrix_2022 <- cor(Merged_2022[, c("yearly_avg_PM25",
 # Print the correlation matrix for 2022
 print(correlation_matrix_2022)
 
+library(corrplot)
+
+# Plot Heatmap for 2022
+corrplot(correlation_matrix_2022, 
+         method = "color", 
+         type = "upper", 
+         col = colorRampPalette(c("blue", "white", "red"))(200),
+         title = "Correlation Heatmap (2022)", 
+         tl.col = "black", 
+         tl.srt = 45, 
+         tl.cex = 0.5,
+         cl.cex = 0.5, 
+         mar = c(1, 1, 1, 1), 
+         order = "hclust"
+)
+
+
 # CORRELATION MATRIX - 2000
 # Test associations between PM2.5 and socioeconomic variables for 2000 data
 correlation_matrix_2000 <- cor(Merged_2000[, c("yearly_avg_PM25", 
@@ -211,6 +233,20 @@ correlation_matrix_2000 <- cor(Merged_2000[, c("yearly_avg_PM25",
 
 # Print the correlation matrix for 2000
 print(correlation_matrix_2000)
+
+# Plot Heatmap for 2000
+corrplot(correlation_matrix_2000, 
+         method = "color", 
+         type = "upper", 
+         col = colorRampPalette(c("blue", "white", "red"))(200),
+         title = "Correlation Heatmap (2022)", 
+         tl.col = "black", 
+         tl.srt = 45, 
+         tl.cex = 0.5,
+         cl.cex = 0.5, 
+         mar = c(1, 1, 1, 1), 
+         order = "hclust"
+)
 
 ```
 
@@ -327,24 +363,61 @@ print(poverty_pm25_summary)
 model <- lm(yearly_avg_PM25 ~ Percent_Below_150_Poverty + Minority_Percentage, data = Merged_2022)
 summary(model)
 library(ggplot2)
+
+# Scatter Plot for Percent Below 150% Poverty vs PM2.5
 ggplot(Merged_2022, aes(x = Percent_Below_150_Poverty, y = yearly_avg_PM25)) +
-    geom_point() +
-    geom_smooth(method = "lm", col = "blue")
+  geom_point(color = "darkblue", alpha = 0.7, size = 1) +
+  geom_smooth(method = "lm", color = "blue", se = TRUE) +
+  labs(
+    title = "Relationship Between Poverty and PM2.5 (2022)",
+    x = "Percent Below 150% Poverty",
+    y = "Yearly Average PM2.5 (μg/m³)",
+    caption = "Data Source: EPA and CDC"
+  ) +
+  mytheme
+
+# Scatter Plot for Minority Percentage vs PM2.5
 ggplot(Merged_2022, aes(x = Minority_Percentage, y = yearly_avg_PM25)) +
-    geom_point() +
-    geom_smooth(method = "lm", col = "blue")
+  geom_point(color = "darkgreen", alpha = 0.7, size = 1) +
+  geom_smooth(method = "lm", color = "blue", se = TRUE) +
+  labs(
+    title = "Relationship Between Minority Percentage and PM2.5 (2022)",
+    x = "Minority Percentage",
+    y = "Yearly Average PM2.5 (μg/m³)",
+    caption = "Data Source: EPA and CDC"
+  ) +
+  mytheme
+
 
 ```
 ```{r}
 model <- lm(yearly_avg_PM25 ~ Percent_Below_150_Poverty + Minority_Population_Estimate, data = Merged_2000)
 summary(model)
-library(ggplot2)
-ggplot(Merged_2000, aes(x = Percent_Below_150_Poverty, y = yearly_avg_PM25)) +
-    geom_point() +
-    geom_smooth(method = "lm", col = "blue")
-ggplot(Merged_2000, aes(x = Minority_Population_Estimate, y = yearly_avg_PM25)) +
-    geom_point() +
-    geom_smooth(method = "lm", col = "blue")
+
+# Scatter Plot for Percent Below Poverty vs PM2.5
+ggplot(Merged_2000, aes(x = Percent_Below_Poverty, y = yearly_avg_PM25)) +
+  geom_point(color = "darkblue", alpha = 0.7, size = 1) +
+  geom_smooth(method = "lm", color = "blue", se = TRUE) +
+  labs(
+    title = "Relationship Between Poverty and PM2.5 (2000)",
+    x = "Percent Below Poverty",
+    y = "Yearly Average PM2.5 (μg/m³)",
+    caption = "Data Source: EPA and CDC"
+  ) +
+  mytheme
+
+# Scatter Plot for Minority Percentage vs PM2.5
+ggplot(Merged_2000, aes(x = Minority_Percentage, y = yearly_avg_PM25)) +
+  geom_point(color = "darkgreen", alpha = 0.7, size = 1) +
+  geom_smooth(method = "lm", color = "blue", se = TRUE) +
+  labs(
+    title = "Relationship Between Minority Percentage and PM2.5 (2000)",
+    x = "Minority Percentage",
+    y = "Yearly Average PM2.5 (μg/m³)",
+    caption = "Data Source: EPA and CDC"
+  ) +
+  mytheme
+
 ```
 
 
