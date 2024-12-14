@@ -10,7 +10,6 @@ subtitle: "ENVIRON 872 - Environmental Data Exploration"
 author: "Sujay Dhanagare, Weilin Wang, Emily Guyu Yang"
 ---
 
-\listoftables 
 \listoffigures 
 
 ```{r setup, include=FALSE, message=FALSE}
@@ -37,7 +36,7 @@ mytheme <- theme_minimal() +
 
 # Research Questions
 
-Research Question: Do communities facing higher pollution levels have less access to health insurance and medical care?
+Do communities of California counties facing higher pollution levels have more indicators for vulnerability?
 
 # Objective
 This study explores the relationships between PM2.5 levels (air pollution) and social vulnerability indicators, including poverty rates, minority percentages, and health insurance coverage, across California counties for the years 2000 and 2022.
@@ -90,6 +89,7 @@ The final dataset has the following structure:
 | Minority_Percentage | Numeric | Percentage of minority (non-white) population |
 | yearly_avg_PM25_2000 | Numeric | Yearly average PM2.5 concentration in 2000 |
 | yearly_avg_PM25_2022 | Numeric | Yearly average PM2.5 concentration in 2022 |
+| Percent_Below_Poverty_2000    | Numeric   | % population below 100% poverty line (2000)|
 
 By combining the air quality and socioeconomic data, this dataset enables the investigation 
 of the relationships between environmental exposures and demographic factors across California counties over the 22-year period from 2000 to 2022.
@@ -137,12 +137,14 @@ PM2_5_2022 <- PM2_5_2022 %>%
 PM2_5_2022_result <- PM2_5_2022 %>%
   mutate(year = year(Date)) %>%
   group_by(`County FIPS Code`, year) %>%
-  summarise(`Daily Mean PM2.5 Concentration` = mean(`Daily Mean PM2.5 Concentration`, na.rm = TRUE)) %>%
+  summarise(
+    `Daily Mean PM2.5 Concentration` = 
+      mean(`Daily Mean PM2.5 Concentration`, 
+           na.rm = TRUE)) %>%
   summarise(
     yearly_avg_PM25 = 
       mean(`Daily Mean PM2.5 Concentration`, na.rm = TRUE)
     )
-print(PM2_5_2022_result)
 
 # Fixing date parsing for PM2.5 2000 dataset
 PM2_5_2000 <- PM2_5_2000 %>%
@@ -158,7 +160,6 @@ PM2_5_2000_result <- PM2_5_2000 %>%
       mean(`Daily Mean PM2.5 Concentration`, na.rm = TRUE)
     ) %>%
   summarise(yearly_avg_PM25 = mean(`Daily Mean PM2.5 Concentration`, na.rm = TRUE))
-print(PM2_5_2000_result)
 ```
 
 ```{r}
@@ -176,40 +177,6 @@ Merged_2022 <- Merged_2022 %>%
 head(Merged_2000)
 head(Merged_2022)
 
-```
-
-```{r,  fig.cap="PM2.5 Levels Across California (2022)", echo=FALSE}
-# Load the shapefile
-shapefile_path <- "DATA/CA_Counties.shp"
-counties <- st_read(shapefile_path)
-#print(counties)
-
-county_map <- counties %>%
-  left_join(Merged_2022, by = c("COUNTYFP" = "County FIPS Code"))
-
-ggplot(data = county_map) +
-  geom_sf(aes(fill = yearly_avg_PM25)) +
-  scale_fill_viridis_c(option = "plasma",direction = -1, name = "PM2.5 (mu * g/m³)") + 
-  labs(
-    title = "PM2.5 Levels Across California (2022)",
-    caption = "Data Source: EPA and CDC"
-  ) +
-  mytheme
-```
-
-```{r, fig.cap= "PM2.5 Levels Across California (2022)", echo=FALSE}
-# Map of PM2.5 levels for 2000 data
-county_map <- counties %>%
-  left_join(Merged_2000, by = c("COUNTYFP" = "County FIPS Code"))
-
-ggplot(data = county_map) +
-  geom_sf(aes(fill = yearly_avg_PM25)) + 
-  scale_fill_viridis_c(option = "plasma",direction = -1, name = "PM2.5 (mu * g/m³)") + 
-  labs(
-    title = "PM2.5 Levels Across California (2000)",
-    caption = "Data Source: EPA and CDC"
-  ) +
-  mytheme
 ```
 
 ```{r, message=FALSE}
@@ -240,6 +207,44 @@ Merged_2022 <- Merged_2022 %>%
 head(Merged_2022)
 
 ```
+
+
+```{r,  fig.cap="PM2.5 Levels Across California (2022)", message=FALSE}
+# Load the shapefile
+shapefile_path <- "DATA/CA_Counties.shp"
+counties <- st_read(shapefile_path)
+#print(counties)
+
+county_map <- counties %>%
+  left_join(Merged_2022, by = c("COUNTYFP" = "County FIPS Code"))
+
+ggplot(data = county_map) +
+  geom_sf(aes(fill = yearly_avg_PM25)) +
+  scale_fill_viridis_c(option = "plasma",direction = -1, name = "PM2.5 (mu * g/m³)") + 
+  labs(
+    title = "PM2.5 Levels Across California (2022)",
+    caption = "Data Source: EPA and CDC"
+  ) +
+  mytheme
+```
+
+
+```{r, fig.cap= "PM2.5 Levels Across California (2022)"}
+# Map of PM2.5 levels for 2000 data
+county_map <- counties %>%
+  left_join(Merged_2000, by = c("COUNTYFP" = "County FIPS Code"))
+
+ggplot(data = county_map) +
+  geom_sf(aes(fill = yearly_avg_PM25)) + 
+  scale_fill_viridis_c(option = "plasma",direction = -1, name = "PM2.5 (mu * g/m³)") + 
+  labs(
+    title = "PM2.5 Levels Across California (2000)",
+    caption = "Data Source: EPA and CDC"
+  ) +
+  mytheme
+```
+
+
 ## Correlation Analysis
 ```{r}
 # This examines associations between PM2.5 and other variables 
@@ -306,7 +311,7 @@ corrplot(correlation_matrix_2000,
 Note: This is for exploring associations, not causation.
 ```{r}
 # This models PM2.5 as a function of Percent Uninsured, 
-  # Percent Below Poverty, and Minority Percentage.
+    # Percent Below Poverty, and Minority Percentage.
 # This regression is for associational analysis, not to infer causation.
 
 # REGRESSION MODELS - 2022
@@ -425,7 +430,7 @@ model <-
      data = Merged_2022)
 summary(model)
 ```
-```{r, fig.cap="Relationship Between Poverty and PM2.5 (2022)", echo=FALSE, message=FALSE}
+```{r, fig.cap="Relationship Between Poverty and PM2.5 (2022)", message=FALSE}
 # Scatter Plot for Percent Below 150% Poverty vs PM2.5
 ggplot(Merged_2022, aes(x = Percent_Below_150_Poverty, y = yearly_avg_PM25)) +
   geom_point(color = "darkblue", alpha = 0.7, size = 1) +
@@ -440,7 +445,7 @@ ggplot(Merged_2022, aes(x = Percent_Below_150_Poverty, y = yearly_avg_PM25)) +
 
 ```
 
-```{r, fig.cap="Relationship Between Minority Percentage and PM2.5 (2022)", echo=FALSE, message=FALSE}
+```{r, fig.cap="Relationship Between Minority Percentage and PM2.5 (2022)", message=FALSE}
 # Scatter Plot for Minority Percentage vs PM2.5
 ggplot(Merged_2022, aes(x = Minority_Percentage, y = yearly_avg_PM25)) +
   geom_point(color = "orange", alpha = 0.7, size = 1) +
@@ -461,7 +466,7 @@ model <-
 summary(model)
 ```
 
-```{r, fig.cap="Relationship Between Poverty and PM2.5 (2000)", echo=FALSE, message=FALSE}
+```{r, fig.cap="Relationship Between Poverty and PM2.5 (2000)", message=FALSE}
 # Scatter Plot for Percent Below Poverty vs PM2.5
 ggplot(Merged_2000, aes(x = Percent_Below_Poverty, y = yearly_avg_PM25)) +
   geom_point(color = "darkblue", alpha = 0.7, size = 1) +
@@ -475,7 +480,7 @@ ggplot(Merged_2000, aes(x = Percent_Below_Poverty, y = yearly_avg_PM25)) +
   mytheme
 ```
 
-```{r, fig.cap="Relationship Between Minority Percentage and PM2.5 (2000)", echo=FALSE, message=FALSE}
+```{r, fig.cap="Relationship Between Minority Percentage and PM2.5 (2000)", message=FALSE}
 # Scatter Plot for Minority Percentage vs PM2.5
 ggplot(Merged_2000, aes(x = Minority_Percentage, y = yearly_avg_PM25)) +
   geom_point(color = "orange", alpha = 0.7, size = 1) +
@@ -505,7 +510,11 @@ This project investigates the relationship between air pollution levels, measure
 The findings revealed significant relationships between PM2.5 levels and social vulnerability indicators. In 2022, counties with higher minority percentages and poverty rates exhibited higher PM2.5 levels. Similarly, the analysis for 2000 identified a positive association between PM2.5 levels and minority percentages, though the association with poverty was weaker. Comparisons between 2000 and 2022 highlighted a notable decline in PM2.5 levels over time, accompanied by reductions in poverty rates, while minority percentages increased.
 
 
-This study highlights the intersection between environmental quality and social equity, emphasizing that vulnerable communities face disproportionate exposure to air pollution. The result indicates 1) minority populations and economically disadvantaged communities are more exposed to higher PM2.5 levels, reinforcing concerns about environmental justice. 2) From 2000 to 2022, there was a significant reduction in PM2.5 levels across California counties, coinciding with poverty reductions. However, despite these improvements, disparities persist, particularly in counties with high minority populations.3) Policies aimed at improving air quality must address the unequal burden on vulnerable populations.
-Intersectional approaches are needed to target areas where social vulnerabilities overlap with high pollution levels. 5) Future Research: Additional studies should explore causal mechanisms, focusing on factors such as proximity to pollution sources (e.g., industrial facilities or highways) and changes in county-level demographics.
+This study highlights the intersection between environmental quality and social equity, emphasizing that vulnerable communities face disproportionate exposure to air pollution. The result indicates 1) minority populations and economically disadvantaged communities are more exposed to higher PM2.5 levels, reinforcing concerns about environmental justice. 2) From 2000 to 2022, there was a significant reduction in PM2.5 levels across California counties, coinciding with poverty reductions. However, despite these improvements, disparities persist, particularly in counties with high minority populations. 3) Policies aimed at improving air quality must address the unequal burden on vulnerable populations.
+Intersectional approaches are needed to target areas where social vulnerabilities overlap with high pollution levels. 4) Future Research: Additional studies should explore causal mechanisms, focusing on factors such as proximity to pollution sources (e.g., industrial facilities or highways) and changes in county-level demographics.
 
 This analysis highlights the importance of integrating environmental and social data to inform policies promoting equity and sustainability. By reducing pollution exposure in vulnerable communities, policymakers can advance both public health and environmental justice objectives.
+
+# Reference
+CA Shapefile data: https://data.ca.gov/dataset/ca-geographic-boundaries
+
