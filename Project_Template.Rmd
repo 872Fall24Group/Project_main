@@ -84,12 +84,12 @@ The final dataset has the following structure:
 |-------------|-----------|-------------|
 | County FIPS Code | Character | Unique identifier for each county |
 | County | Character | Name of the county |
-| Percent_Below_150_Poverty | Numeric | Percentage of population below 150% of the poverty level |
+| Percent_Below_Poverty | Numeric | Percentage of population below poverty level in 2000|
+| Percent_Below_Poverty | Numeric | Percentage of population below poverty level in 2022|
 | Percent_Uninsured | Numeric | Percentage of population without health insurance coverage |
 | Minority_Percentage | Numeric | Percentage of minority (non-white) population |
 | yearly_avg_PM25_2000 | Numeric | Yearly average PM2.5 concentration in 2000 |
 | yearly_avg_PM25_2022 | Numeric | Yearly average PM2.5 concentration in 2022 |
-| Percent_Below_Poverty_2000    | Numeric   | % population below 100% poverty line (2000)|
 
 By combining the air quality and socioeconomic data, this dataset enables the investigation 
 of the relationships between environmental exposures and demographic factors across California counties over the 22-year period from 2000 to 2022.
@@ -516,5 +516,5 @@ Intersectional approaches are needed to target areas where social vulnerabilitie
 This analysis highlights the importance of integrating environmental and social data to inform policies promoting equity and sustainability. By reducing pollution exposure in vulnerable communities, policymakers can advance both public health and environmental justice objectives.
 
 # Reference
-CA Shapefile data: https://data.ca.gov/dataset/ca-geographic-boundaries
-
+CA Shapefile data source: https://data.ca.gov/dataset/ca-geographic-boundaries
+Poverty data source: U.S. Census Bureau, Small Area Income and Poverty Estimates (SAIPE) Program, December 2023, Project No. P-7502872 / Approval CBDRB-FY24-0047.
